@@ -1,0 +1,12 @@
+# Build output
+build/
+out/
+.vs/
+
+# The supplied location files (NOT FOR SUBMISSION)
+data/
+
+# Files the PROGRAM and the PLOTS write
+nearest.csv
+furthest.csv
+*.png
