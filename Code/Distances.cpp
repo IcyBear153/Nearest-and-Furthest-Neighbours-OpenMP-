@@ -62,9 +62,10 @@ void findNeighboursParallel(const std::vector<Point>&points, DistanceType type,
   furthest.resize(n);
 
   // each iteration only writes its nearest[i] and furthest[i]
-  // meaning no two threads ever write to the same plcae so htye dont need to wait for eachother (they wont clash its fine to run in paralel)
+  // meaning no two threads ever write to the same place so they dont need to wait for eachother (they wont clash its fine to run in paralel)
 
-  #pragma omp parallel for
+  // schedule(runtime) is set by OMP_SCHEDULE when the program runs so dont need to recompile to change for different schedules
+  #pragma omp parallel for schedule(runtime)
   for (int i=0; i<n; ++i) {
     processPoint(i, points, type, nearest, furthest);
   }
