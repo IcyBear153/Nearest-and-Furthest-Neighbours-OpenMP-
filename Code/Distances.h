@@ -21,3 +21,8 @@ double distance(const Point&a, const Point&b, DistanceType type);
 
 void findNeighboursSerial(const std::vector<Point>& points, DistanceType type,
                           std::vector<double>& nearest, std::vector<double>& furthest);
+
+
+
+// The average calculated of list
+double meanSerial(const std::vector<double>& values);

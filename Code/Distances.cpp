@@ -52,3 +52,12 @@ void findNeighboursSerial(const std::vector<Point>& points, DistanceType type,
     processPoint(i, points, type, nearest, furthest);
   }
 }
+
+double meanSerial(const std::vector<double>& values) {
+  int n = static_cast<int>(values.size());
+  double sum = 0.0;
+  for (int i=0; i<n; ++i) {
+    sum += values[i];
+  }
+  return sum / n;
+}

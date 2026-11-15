@@ -12,6 +12,7 @@ int main(int argc, char* argv[]) {
 
   // TEMP --- Read points fom the file that are named
   // IF NOT Making 1000 random points and outputting --- TEMP
+  // this is to save me time when running. Since the nieve algorithm is so slow, I use my own data
 
   std::vector<Point> points;
   if (argc >1) {
@@ -29,9 +30,11 @@ int main(int argc, char* argv[]) {
 
   findNeighboursSerial(points, DistanceType::Standard, nearest, furthest);
  
-  for (int i=0; i<3; ++i) {
-    cout << "Point " <<i<< ": nearest " <<nearest[i]<< ",furthest" <<furthest[i]<< endl;
-  }
-  
+  double meanNearest = meanSerial(nearest);
+  double meanFurthest = meanSerial(furthest);
+
+  cout << "Mean distance to Nearest Neighbour :" << meanNearest  <<endl;
+  cout << "Mean distance to Furthest Neighbour:" << meanFurthest <<endl;
+
   return EXIT_SUCCESS;
 }
