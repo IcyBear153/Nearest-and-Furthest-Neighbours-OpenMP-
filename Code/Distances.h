@@ -29,3 +29,4 @@ void findNeighboursParallel(const std::vector<Point>& points, DistanceType type,
 
 // The average calculated of list
 double meanSerial(const std::vector<double>& values);
+double meanParallel(const std::vector<double>& values);

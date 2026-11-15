@@ -63,7 +63,7 @@ void findNeighboursParallel(const std::vector<Point>&points, DistanceType type,
 
   // each iteration only writes its nearest[i] and furthest[i]
   // meaning no two threads ever write to the same plcae so htye dont need to wait for eachother (they wont clash its fine to run in paralel)
-  
+
   #pragma omp parallel for
   for (int i=0; i<n; ++i) {
     processPoint(i, points, type, nearest, furthest);
@@ -78,5 +78,17 @@ double meanSerial(const std::vector<double>&values) {
   for (int i=0; i<n; ++i) {
     sum += values[i];
   }
-  return sum / n;
+  return sum/n;
+}
+
+
+double meanParallel(const std::vector<double>& values) {
+  int n = static_cast<int>(values.size());
+  double sum = 0.0;
+  // evry thread keeps a running total and openmp combines them into one sum at the end
+  #pragma omp parallel for reduction(+:sum)
+  for (int i=0; i<n; ++i) {
+    sum += values[i];
+  }
+  return sum/n;
 }
