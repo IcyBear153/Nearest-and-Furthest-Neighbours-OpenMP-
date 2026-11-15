@@ -12,8 +12,12 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
+#include <omp.h>
+
+
 
 #include "Distances.h"
 #include "Locations.h"
@@ -130,6 +134,10 @@ int main(int argc, char*argv[]) {
     return EXIT_FAILURE;
   }
   
+
+    // Time calculation
+  double startTime = omp_get_wtime();
+
   
   
   std::vector<double> nearest;
@@ -138,11 +146,16 @@ int main(int argc, char*argv[]) {
   double meanNearest = meanSerial(nearest);
   double meanFurthest = meanSerial(furthest);
 
+  double timeTaken = omp_get_wtime() - startTime;
+ 
+
   writeValues("nearest.csv", nearest);
   writeValues("furthest.csv", furthest);
 
   cout << "Mean distance to nearest neighbour: "  <<meanNearest  <<endl;
   cout << "Mean distance to furthest neighbour: " <<meanFurthest <<endl;
+  cout << std::fixed << std::setprecision(3);
+  cout << "Time taken: " << timeTaken << "seconds" << endl;
 
   return EXIT_SUCCESS;
 }
