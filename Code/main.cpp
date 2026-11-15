@@ -1,12 +1,24 @@
 // Nearest and furthest neighbours
-
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include "Distances.h"
 #include "Locations.h"
 
 using std::cout, std::endl;
+
+// Write values to a file, one per line with default number format and no headr
+void writeValues(const std::string& filename, const std::vector<double>& values) {
+  std::ofstream file(filename);
+
+  for (double value : values) {
+    file << value << '\n';
+  }
+}
+
 
 int main(int argc, char* argv[]) {
 
@@ -32,6 +44,9 @@ int main(int argc, char* argv[]) {
  
   double meanNearest = meanSerial(nearest);
   double meanFurthest = meanSerial(furthest);
+
+  writeValues("nearest.csv", nearest);
+  writeValues("furthest.csv", furthest);
 
   cout << "Mean distance to Nearest Neighbour :" << meanNearest  <<endl;
   cout << "Mean distance to Furthest Neighbour:" << meanFurthest <<endl;
