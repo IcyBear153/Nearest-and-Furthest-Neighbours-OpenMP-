@@ -1,4 +1,14 @@
 // Nearest and furthest neighbours
+
+// Takes a set of points in a square on each side, from 0 to 1.
+// For every point works out how close and far the nearest and furtherest other points are respectivley.
+// It does this the simple/native way, by checking every pair.
+// Points can be random (-n) or read from a file (-f).
+
+// Usage:
+//     nearest_furthest -n <count> -d std|man -s|-p
+//     nearest_furthest -f <file>  -d std|man -s|-p
+
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -8,48 +18,131 @@
 #include "Distances.h"
 #include "Locations.h"
 
-using std::cout, std::endl;
+using std::cout, std::cerr, std::endl;
 
-// Write values to a file, one per line with default number format and no headr
-void writeValues(const std::string& filename, const std::vector<double>& values) {
-  std::ofstream file(filename);
+// Stores the users choices from the command line
+struct Settings {
+  int count =0;                                // -n: number of random points to make
+  std::string filename;                        // -f: CSV file to read the points from
+  DistanceType type = DistanceType::Standard;  // -d: which distance to use (std or man)
+  bool parallel = false;                       // -s (serial) or -p (parallel)
+};
 
-  for (double value : values) {
-    file << value << '\n';
+void printUsage() {
+  cerr << "Usage:\n"
+       << " nearest_furthest -n <count> -d std|man -s|-p\n"
+       << " nearest_furthest -f <file>  -d std|man -s|-p\n";
+}
+
+// Fills in settings from the command line. Returns false if it isn't valid.
+bool readCommandLine(int argc, char*argv[], Settings&settings) {
+  bool serialGiven = false;
+  bool parallelGiven = false;
+
+  for (int i=1 ; i<argc; ++i) {
+    std::string option = argv[i];
+    bool hasValue = (i+1 <argc);
+
+
+    if (option == "-n" && hasValue) {
+      settings.count = std::atoi(argv[++i]);
+      if (settings.count <2) {
+        cerr<< "!! ERROR -- -n needs to be at least 2 points !!" << endl;
+        return false;
+      }
+    }
+
+    else if (option == "-f" && hasValue) {
+      settings.filename = argv[++i];
+    }
+
+    else if (option == "-d" && hasValue) {
+      std::string value = argv[++i];
+      if (value == "std") {
+        settings.type = DistanceType::Standard;
+      }
+      else if (value == "man") {
+        settings.type = DistanceType::Manhattan;
+      }
+      else {
+        cerr << "!! ERROR!!! -- -d must be followed by std or man !!" << endl;
+        return false;
+      }
+    }
+
+    else if (option == "-s") {
+      serialGiven = true;
+    }
+    else if (option == "-p") {
+      parallelGiven = true;
+    }
+
+    else {
+      cerr << "!! ERROR-- unknown !!" << option << endl;
+      return false;
+    }
   }
+  
+  
+  
+  bool countGiven = (settings.count >0);
+  bool fileGiven = !settings.filename.empty();
+
+  if (countGiven == fileGiven) {
+    cerr<< "!! ERROR -- give EITHER -n or -f !!" <<endl;
+    return false;
+  }
+
+  if (serialGiven && parallelGiven) {
+    cerr << "!! ERROR -- give EITHER -s or -p !!" <<endl;
+    return false;
+  }
+
+  settings.parallel = parallelGiven;
+  return true;
 }
 
 
-int main(int argc, char* argv[]) {
+// writes one value per line (default formating)
+void writeValues(const std::string& filename, const std::vector<double>&values) {
+  std::ofstream file(filename);
+  for (double value : values) {
+    file <<value<< '\n';
+  }
+}
 
-  // TEMP --- Read points fom the file that are named
-  // IF NOT Making 1000 random points and outputting --- TEMP
-  // this is to save me time when running. Since the nieve algorithm is so slow, I use my own data
+int main(int argc, char*argv[]) {
+  Settings settings;
+  if (!readCommandLine(argc,argv, settings)) {
+    printUsage();
+    return EXIT_FAILURE;
+  }
 
   std::vector<Point> points;
-  if (argc >1) {
-    points = readLocations(argv[1]);
+  if (!settings.filename.empty()) {
+    points = readLocations(settings.filename);
   }
   else {
-    points = generateRandomLocations(1000);
+    points = generateRandomLocations(settings.count);
   }
-
-  cout << "Number of points:" <<points.size() <<endl;
-  cout << "First point:" <<points[0].x << "," <<points[0].y <<endl;
-
+  if (points.size() <2) {
+    cerr<< "!! ERROR -- -n needs to be at least 2 points !!" << endl;
+    return EXIT_FAILURE;
+  }
+  
+  
+  
   std::vector<double> nearest;
   std::vector<double> furthest;
-
-  findNeighboursSerial(points, DistanceType::Standard, nearest, furthest);
- 
+  findNeighboursSerial(points, settings.type, nearest, furthest);
   double meanNearest = meanSerial(nearest);
   double meanFurthest = meanSerial(furthest);
 
   writeValues("nearest.csv", nearest);
   writeValues("furthest.csv", furthest);
 
-  cout << "Mean distance to Nearest Neighbour :" << meanNearest  <<endl;
-  cout << "Mean distance to Furthest Neighbour:" << meanFurthest <<endl;
+  cout << "Mean distance to nearest neighbour: "  <<meanNearest  <<endl;
+  cout << "Mean distance to furthest neighbour: " <<meanFurthest <<endl;
 
   return EXIT_SUCCESS;
 }
