@@ -4,7 +4,7 @@
 #include <limits>
 
 
-double distance(const Point& a, const Point& b, DistanceType type) {
+double distance(const Point&a, const Point&b, DistanceType type) {
   double dx = (a.x) - (b.x);
   double dy = (a.y)- (b.y);
 
@@ -17,8 +17,8 @@ double distance(const Point& a, const Point& b, DistanceType type) {
 
 // Compares i with every point and stores smalest and largest
 // distances in nearest[i] and furthest[i] -- only used inside THIS file
-static void processPoint(int i, const std::vector<Point>& points, DistanceType type,
-                         std::vector<double>& nearest, std::vector<double>& furthest) {
+static void processPoint(int i, const std::vector<Point>&points, DistanceType type,
+                         std::vector<double>&nearest, std::vector<double>&furthest) {
 
   int n = static_cast<int>(points.size());
   double minDistance = std::numeric_limits<double>::max();
@@ -41,8 +41,8 @@ static void processPoint(int i, const std::vector<Point>& points, DistanceType t
   furthest[i] = maxDistance;
 }
 
-void findNeighboursSerial(const std::vector<Point>& points, DistanceType type,
-                          std::vector<double>& nearest, std::vector<double>& furthest) {
+void findNeighboursSerial(const std::vector<Point>&points, DistanceType type,
+                          std::vector<double>&nearest, std::vector<double>&furthest) {
 
   int n = static_cast<int>(points.size());
   nearest.resize(n);
@@ -53,7 +53,26 @@ void findNeighboursSerial(const std::vector<Point>& points, DistanceType type,
   }
 }
 
-double meanSerial(const std::vector<double>& values) {
+
+void findNeighboursParallel(const std::vector<Point>&points, DistanceType type,
+                            std::vector<double>&nearest, std::vector<double>&furthest) {
+
+  int n = static_cast<int>(points.size());
+  nearest.resize(n);
+  furthest.resize(n);
+
+  // each iteration only writes its nearest[i] and furthest[i]
+  // meaning no two threads ever write to the same plcae so htye dont need to wait for eachother (they wont clash its fine to run in paralel)
+  
+  #pragma omp parallel for
+  for (int i=0; i<n; ++i) {
+    processPoint(i, points, type, nearest, furthest);
+  }
+}
+
+
+
+double meanSerial(const std::vector<double>&values) {
   int n = static_cast<int>(values.size());
   double sum = 0.0;
   for (int i=0; i<n; ++i) {
