@@ -9,8 +9,10 @@
 //     nearest_furthest -n <count> -d std|man -s|-p
 //     nearest_furthest -f <file>  -d std|man -s|-p
 
+#include <chrono>
 #include <cstdlib>
 #include <fstream>
+#include <chrono> // EXTRA include because fstream dosent seem to be taking time from the right point alone. WANT TO TRIM DOWN AND REMOVE IF POSSIBLE
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -136,18 +138,28 @@ int main(int argc, char*argv[]) {
   
 
     // Time calculation
-  double startTime = omp_get_wtime();
-
+  auto startTime = std::chrono::steady_clock::now();
   
   
   std::vector<double> nearest;
   std::vector<double> furthest;
-  findNeighboursSerial(points, settings.type, nearest, furthest);
-  double meanNearest = meanSerial(nearest);
-  double meanFurthest = meanSerial(furthest);
 
-  double timeTaken = omp_get_wtime() - startTime;
- 
+  double meanNearest;
+  double meanFurthest;
+  if (settings.parallel) {
+    findNeighboursParallel(points, settings.type, nearest, furthest);
+    meanNearest = meanParallel(nearest);
+    meanFurthest = meanParallel(furthest);
+  }
+  else {
+    findNeighboursSerial(points, settings.type, nearest, furthest);
+    meanNearest = meanSerial(nearest);
+    meanFurthest = meanSerial(furthest);
+  }
+
+
+  //take time on clock from the start time
+  double timeTaken = std::chrono::duration<double>(std::chrono::steady_clock::now() -startTime).count(); 
 
   writeValues("nearest.csv", nearest);
   writeValues("furthest.csv", furthest);
@@ -155,7 +167,7 @@ int main(int argc, char*argv[]) {
   cout << "Mean distance to nearest neighbour: "  <<meanNearest  <<endl;
   cout << "Mean distance to furthest neighbour: " <<meanFurthest <<endl;
   cout << std::fixed << std::setprecision(3);
-  cout << "Time taken: " << timeTaken << "seconds" << endl;
+  cout << "Time taken: " << timeTaken << " seconds" << endl;
 
   return EXIT_SUCCESS;
 }
