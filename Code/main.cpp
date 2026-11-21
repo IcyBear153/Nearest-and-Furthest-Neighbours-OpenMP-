@@ -12,7 +12,6 @@
 #include <chrono>
 #include <cstdlib>
 #include <fstream>
-#include <chrono> // EXTRA include because fstream dosent seem to be taking time from the right point alone. WANT TO TRIM DOWN AND REMOVE IF POSSIBLE
 #include <iostream>
 #include <iomanip>
 #include <string>
