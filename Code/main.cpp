@@ -60,30 +60,20 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
 
     else if (option == "-d" && hasValue) {
       std::string value = argv[++i];
-      if (value == "std") {
-        settings.type = DistanceType::Standard;
-      }
-      else if (value == "man") {
-        settings.type = DistanceType::Manhattan;
-      }
-      else {
+      if (value != "std" && value != "man") {
         cerr << "!! ERROR!!! -- -d must be followed by std or man !!" << endl;
         return false;
       }
+      settings.type = (value == "man") ? DistanceType::Manhattan : DistanceType::Standard;
     }
     
     else if (option == "-a" && hasValue) {
       std::string value = argv[++i];
-      if (value == "naive") {
-        settings.half = false;
-      }
-      else if (value == "half") {
-        settings.half = true;
-      }
-      else {
+      if (value != "naive" && value != "half") {
         cerr << "!! ERROR -- -a must be followed by naive or half !!" << endl;
         return false;
       }
+      settings.half = (value == "half");
     }
 
     else if (option == "-s") {
