@@ -10,7 +10,7 @@ std::vector<Point> generateRandomLocations(int count) {
   // Is used once to start the generator allowing every run to give different points
   std::random_device seed;
   std::mt19937 generator(seed());  // fast generator that makes long stream of randnumbers from a seed
-  std::uniform_real_distribution<double> uniform(0.0,1.0);  // turns the generators numbers into pairs spread over the arg evenly
+  std::uniform_real_distribution<double> uniform(0.0,1.0);   // turns generators numbers to single numbers spread evenly
   std::vector<Point> points(count);
 
   for (int i=0; i< count; ++i) {

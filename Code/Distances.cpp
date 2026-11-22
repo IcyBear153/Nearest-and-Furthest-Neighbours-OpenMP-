@@ -15,7 +15,7 @@ double distance(const Point&a, const Point&b, DistanceType type) {
 }
 
 // Brute force - Naive
-// every point checks every other so each pair is worked out n x (n-1) times.
+// every point checks every other so each pair is worked out twice (n x (n-1) distances)
 // Every row does the same amount of work so the choice of shcedule makes little difference here
 void findNeighbours(const std::vector<Point>&points, DistanceType type, bool parallel, std::vector<double>&nearest, std::vector<double>&furthest) {
   int n = static_cast<int>(points.size()); // size() gives unsigned number, so converting to int allows OpenMP to work
@@ -43,7 +43,7 @@ void findNeighbours(const std::vector<Point>&points, DistanceType type, bool par
 }
 
 // Halfing the work search - Explained in distances.h and elsewhere.
-// About n x n / 2 distances, half of findNeighbours with the exact same run time.
+// About n x n / 2 distances, half of findNeighbours, so same answers, half the time.
 // SO row i only checks the points after it (j > i) and duplicates for both.
 void findNeighboursHalf(const std::vector<Point>&points, DistanceType type, bool parallel, std::vector<double>&nearest, std::vector<double>&furthest) {
   int n = static_cast<int>(points.size());
@@ -81,9 +81,9 @@ void findNeighboursHalf(const std::vector<Point>&points, DistanceType type, bool
       myFurthest[i] = maxDistance;
     }
 
+    // Combine each threads copy into shared results.
+    // critical only lets one thread at a time, so they cant clash.
     #pragma omp critical
-    // Each thread adds into its private cop of sum and OpenMP adds coppies together at the end.
-    // Without it threads would all update sum simultaneously and lose some additions
     for (int k=0; k<n; ++k) {
       nearest[k] = std::min(nearest[k], myNearest[k]);
       furthest[k] = std::max(furthest[k], myFurthest[k]);
@@ -95,6 +95,8 @@ void findNeighboursHalf(const std::vector<Point>&points, DistanceType type, bool
 double mean(const std::vector<double>&values, bool parallel) {
   int n = static_cast<int>(values.size());
   double sum = 0.0;
+  // Each thread adds into its private copyy of sum and OpenMP adds coppies together at the end.
+  // Without it threads would all update sum simultaneously and lose some additions
   #pragma omp parallel for reduction(+:sum) if(parallel)
   for (int i=0; i<n; ++i) {
     sum += values[i];

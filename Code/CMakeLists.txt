@@ -1,6 +1,6 @@
 # Build file for CMake. Works with Visual Studio or with Ninja and MinGW
 # From Code folder, run:
-#   cmake -S Code -B build
+#   cmake -S . -B build
 #   cmake --build build --config Release
 cmake_minimum_required(VERSION 3.12)
 project(NearestFurthest LANGUAGES CXX)

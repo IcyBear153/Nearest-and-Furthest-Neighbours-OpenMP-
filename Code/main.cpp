@@ -9,7 +9,7 @@
 // Points are random (-n) or read form a CSF file (-f).
 // Distance is either taken as a striaght line (-d std) or Manhattan (-d man).
 // It runs out one thread (-s) or several with OpenMP (-p).
-// The search checks each pair twice using the default (-a native) or once using the optimised (-a half).
+// The search checks each pair twice using the default (-a naive) or once using the optimised (-a half).
 
 // Usage:
 //     nearest_furthest -n <count> -d std|man -s|-p [-a naive|half]
