@@ -55,6 +55,11 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
   for (int i=1 ; i<argc; ++i) {
     std::string option = argv[i];
     bool hasValue = (i+1 < argc); // check if other word after to use as its value
+    // -n, -f, -d, -a, need a value straight after them
+    if ((option == "-n" || option == "-f" || option == "-d" || option == "-a") &&!hasValue) {
+      cerr << "!! ERROR -- " <<option<< " needs a value after it !!" << endl;
+      return false;
+    }
 
     if (option == "-n" && hasValue) {
       // i++ moves onto the value meaning the loop wont treat it as an option again after
@@ -96,7 +101,7 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
       parallelGiven = true;
     }
     else {
-      cerr << "!! ERROR-- unknown !!" << option << endl;
+      cerr << "!! ERROR -- unknown option " <<option<< "!!" << endl;
       return false;
     }
   }
@@ -146,7 +151,7 @@ int main(int argc, char*argv[]) {
   }
   // file could have less than 2 points, then no neighbour so ERROR
   if (points.size() <2) {
-    cerr<< "!! ERROR -- -n needs to be at least 2 points !!" << endl;
+    cerr << "!! ERROR -- need at least 2 points, but found only " <<points.size()<< "!!" << endl;
     return EXIT_FAILURE;
   }
 
