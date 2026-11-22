@@ -10,12 +10,13 @@
 // Distance is either taken as a striaght line (-d std) or Manhattan (-d man).
 // It runs out one thread (-s) or several with OpenMP (-p).
 // The search checks each pair twice using the default (-a naive) or once using the optimised (-a half).
+// or skips most pairs with a grid and 'convex hull' (-a fast).
 
 // Usage:
-//     nearest_furthest -n <count> -d std|man -s|-p [-a naive|half] [-t threads]
-//     nearest_furthest -f <file>  -d std|man -s|-p [-a naive|half] [-t threads]
+//     nearest_furthest -n <count> -d std|man -s|-p [-a naive|half|fast] [-t threads]
+//     nearest_furthest -f <file>  -d std|man -s|-p [-a naive|half|fast] [-t threads]
 
-// The number of threads and loop shceule come from variables OMP_NUM_THREADS and OMP_SCHEDULE.
+// The number of threads comes from -t or OMP_NUM_THREADS without and the loop shceule from OMP_SCHEDULE.
 
 
 #include <chrono>
@@ -38,6 +39,7 @@ struct Settings {
   DistanceType type = DistanceType::Standard;  // -d: which distance to use (std or man)
   bool parallel = false;                       // -s (serial) or -p (parallel)
   bool half = false;                           // -a: naive (every pair twice) or half (each pair once)
+  bool fast = false;                           // -a fast: a grid for the nearest, the convex hull for the furthest
   int threads = 0;                             // -t: number of threads for -p (0 if not given) (OpenMP decides)
 };
 
@@ -45,7 +47,7 @@ void printUsage() {
   cerr << "Usage:\n"
        << " nearest_furthest -n <count> -d std|man -s|-p\n"
        << " nearest_furthest -f <file>  -d std|man -s|-p\n"
-       << " add -a half to check each pair only once\n"
+       << " add -a half to check each pair only once or -a fast to skip majority of pairs\n"
        << " add -t <threads> to pick how many threads -p uses\n";
 }
 
@@ -90,10 +92,11 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
     
     else if (option == "-a" && hasValue) {
       std::string value = argv[++i];
-      if (value != "naive" && value != "half") {
-        cerr << "!! ERROR -- -a must be followed by naive or half !!" <<endl;
+      if (value!="naive" && value!="half" && value!="fast") {
+        cerr<< "!! ERROR -- -a must be followed by naive, half or fast !!" <<endl;
         return false;
       }
+      settings.fast = (value == "fast");
       settings.half = (value == "half");
     }
 
@@ -184,8 +187,12 @@ int main(int argc, char*argv[]) {
   std::vector<double> furthest;
 
   // -a half picks search tool to only work out each pair once
+  // -a fast picks the one that uses a grid and the 'convex hull' to skip most pairs
   // settings.parralel goes in too meaning same function does both -s and -p
-  if (settings.half) {
+  if (settings.fast) {
+    findNeighboursFast(points, settings.type, settings.parallel, nearest, furthest);
+  }
+  else if (settings.half) {
     findNeighboursHalf(points, settings.type, settings.parallel, nearest, furthest);
   }
   else {
