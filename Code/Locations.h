@@ -5,7 +5,11 @@
 #include <string>
 #include <vector>
 
-#include "Point.h"
+// A position (x, y) in 0 to 1.
+struct Point {
+  double x;
+  double y;
+};
 
 // returns count points with x, y chosen uniformly at random from [0, 1)
 std::vector<Point> generateRandomLocations(int count);

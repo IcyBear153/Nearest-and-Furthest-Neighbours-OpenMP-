@@ -3,7 +3,7 @@
 // BRUTE FORCE/ native algorithm asked for -- (could be improved on...)
 #pragma once
 #include <vector>
-#include "Point.h"
+#include "Locations.h"
 
 enum class DistanceType{
   Standard,   // line distance --  sqrt(dx^2+dy^2)
