@@ -16,10 +16,6 @@
 #include <iomanip>
 #include <string>
 #include <vector>
-#include <omp.h>
-
-
-
 #include "Distances.h"
 #include "Locations.h"
 
@@ -105,8 +101,6 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
     }
   }
   
-  
-  
   bool countGiven = (settings.count >0);
   bool fileGiven = !settings.filename.empty();
 
@@ -151,7 +145,6 @@ int main(int argc, char*argv[]) {
     cerr<< "!! ERROR -- -n needs to be at least 2 points !!" << endl;
     return EXIT_FAILURE;
   }
-  
 
     // Time calculation
   auto startTime = std::chrono::steady_clock::now();
@@ -160,28 +153,14 @@ int main(int argc, char*argv[]) {
   std::vector<double> nearest;
   std::vector<double> furthest;
 
-  double meanNearest;
-  double meanFurthest;
-  if (settings.parallel) {
-    if (settings.half) {
-      findNeighboursHalfParallel(points, settings.type, nearest, furthest);
-    }
-    else {
-      findNeighboursParallel(points, settings.type, nearest, furthest);
-    }
-    meanNearest = meanParallel(nearest);
-    meanFurthest = meanParallel(furthest);
+  if (settings.half) {
+    findNeighboursHalf(points, settings.type, settings.parallel, nearest, furthest);
   }
   else {
-    if (settings.half) {
-      findNeighboursHalfSerial(points, settings.type, nearest, furthest);
-    }
-    else {
-      findNeighboursSerial(points, settings.type, nearest, furthest);
-    }
-    meanNearest = meanSerial(nearest);
-    meanFurthest = meanSerial(furthest);
+    findNeighbours(points, settings.type, settings.parallel, nearest, furthest);
   }
+  double meanNearest = mean(nearest, settings.parallel);
+  double meanFurthest = mean(furthest, settings.parallel);
 
 
   //take time on clock from the start time
