@@ -72,6 +72,48 @@ void findNeighboursParallel(const std::vector<Point>&points, DistanceType type,
 }
 
 
+// Compares i with every point AFTER it, each distance counts for both points
+static void processRow(int i, const std::vector<Point>& points, DistanceType type,
+                       std::vector<double>& nearest, std::vector<double>& furthest) {
+  int n = static_cast<int>(points.size());
+
+  double minDistance = nearest[i];
+  double maxDistance = furthest[i];
+
+  for (int j=i+1; j<n; ++j) {
+    double d = distance(points[i], points[j], type);
+    if (d < minDistance) {
+      minDistance = d;
+    }
+    if (d > maxDistance) {
+      maxDistance = d;
+    }
+    if (d < nearest[j]) {
+      nearest[j] = d;
+    }
+    if (d > furthest[j]) {
+      furthest[j] = d;
+    }
+  }
+  nearest[i] = minDistance;
+  furthest[i] = maxDistance;
+}
+
+void findNeighboursHalfSerial(const std::vector<Point>&points, DistanceType type,
+                              std::vector<double>&nearest, std::vector<double>&furthest) {
+  int n = static_cast<int>(points.size());
+  // nothing found for any point
+  nearest.assign(n, std::numeric_limits<double>::max());
+  furthest.assign(n,0.0);
+
+  for (int i=0; i<n; ++i) {
+    processRow(i, points, type, nearest, furthest);
+  }
+}
+
+
+
+
 
 double meanSerial(const std::vector<double>&values) {
   int n = static_cast<int>(values.size());
@@ -81,7 +123,6 @@ double meanSerial(const std::vector<double>&values) {
   }
   return sum/n;
 }
-
 
 double meanParallel(const std::vector<double>& values) {
   int n = static_cast<int>(values.size());

@@ -31,12 +31,14 @@ struct Settings {
   std::string filename;                        // -f: CSV file to read the points from
   DistanceType type = DistanceType::Standard;  // -d: which distance to use (std or man)
   bool parallel = false;                       // -s (serial) or -p (parallel)
+  bool half = false;                           // -a: naive (every pair twice) or half (each pair once)
 };
 
 void printUsage() {
   cerr << "Usage:\n"
        << " nearest_furthest -n <count> -d std|man -s|-p\n"
-       << " nearest_furthest -f <file>  -d std|man -s|-p\n";
+       << " nearest_furthest -f <file>  -d std|man -s|-p\n"
+       << " add -a half to check each pair only once\n";
 }
 
 // Fills in settings from the command line. Returns false if it isn't valid.
@@ -74,6 +76,21 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
         return false;
       }
     }
+    
+    else if (option == "-a" && hasValue) {
+      std::string value = argv[++i];
+      if (value == "naive") {
+        settings.half = false;
+      }
+      else if (value == "half") {
+        settings.half = true;
+      }
+      else {
+        cerr << "!! ERROR -- -a must be followed by naive or half !!" << endl;
+        return false;
+      }
+    }
+
 
     else if (option == "-s") {
       serialGiven = true;
@@ -151,7 +168,12 @@ int main(int argc, char*argv[]) {
     meanFurthest = meanParallel(furthest);
   }
   else {
-    findNeighboursSerial(points, settings.type, nearest, furthest);
+    if (settings.half) {
+      findNeighboursHalfSerial(points, settings.type, nearest, furthest);
+    }
+    else {
+      findNeighboursSerial(points, settings.type, nearest, furthest);
+    }
     meanNearest = meanSerial(nearest);
     meanFurthest = meanSerial(furthest);
   }
