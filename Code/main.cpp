@@ -19,7 +19,7 @@
 #include "Distances.h"
 #include "Locations.h"
 
-using std::cout, std::cerr, std::endl;
+using std::cout,std::cerr,std::endl;
 
 // Stores the users choices from the command line
 struct Settings {
@@ -44,8 +44,7 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
 
   for (int i=1 ; i<argc; ++i) {
     std::string option = argv[i];
-    bool hasValue = (i+1 <argc);
-
+    bool hasValue = (i+1 < argc);
 
     if (option == "-n" && hasValue) {
       settings.count = std::atoi(argv[++i]);
@@ -87,14 +86,12 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
       }
     }
 
-
     else if (option == "-s") {
       serialGiven = true;
     }
     else if (option == "-p") {
       parallelGiven = true;
     }
-
     else {
       cerr << "!! ERROR-- unknown !!" << option << endl;
       return false;
@@ -108,7 +105,6 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
     cerr<< "!! ERROR -- give EITHER -n or -f !!" <<endl;
     return false;
   }
-
   if (serialGiven && parallelGiven) {
     cerr << "!! ERROR -- give EITHER -s or -p !!" <<endl;
     return false;

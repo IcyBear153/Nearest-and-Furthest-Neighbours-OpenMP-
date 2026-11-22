@@ -12,10 +12,8 @@ enum class DistanceType{
 
 double distance(const Point&a, const Point&b, DistanceType type);
 
-void findNeighbours(const std::vector<Point>& points, DistanceType type, bool parallel,
-                    std::vector<double>& nearest, std::vector<double>& furthest);
+void findNeighbours(const std::vector<Point>&points, DistanceType type, bool parallel, std::vector<double>&nearest, std::vector<double>&furthest);
 
-void findNeighboursHalf(const std::vector<Point>& points, DistanceType type, bool parallel,
-                        std::vector<double>& nearest, std::vector<double>& furthest);
+void findNeighboursHalf(const std::vector<Point>& points, DistanceType type, bool parallel, std::vector<double>&nearest, std::vector<double>&furthest);
 
-double mean(const std::vector<double>& values, bool parallel);
+double mean(const std::vector<double>&values, bool parallel);
