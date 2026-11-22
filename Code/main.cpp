@@ -163,7 +163,12 @@ int main(int argc, char*argv[]) {
   double meanNearest;
   double meanFurthest;
   if (settings.parallel) {
-    findNeighboursParallel(points, settings.type, nearest, furthest);
+    if (settings.half) {
+      findNeighboursHalfParallel(points, settings.type, nearest, furthest);
+    }
+    else {
+      findNeighboursParallel(points, settings.type, nearest, furthest);
+    }
     meanNearest = meanParallel(nearest);
     meanFurthest = meanParallel(furthest);
   }

@@ -112,7 +112,33 @@ void findNeighboursHalfSerial(const std::vector<Point>&points, DistanceType type
 }
 
 
+void findNeighboursHalfParallel(const std::vector<Point>&points, DistanceType type,
+                                std::vector<double>&nearest, std::vector<double>&furthest) {
 
+  int n = static_cast<int>(points.size());
+  nearest.assign(n, std::numeric_limits<double>::max());
+  furthest.assign(n,0.0);
+
+  #pragma omp parallel {
+    std::vector<double> myNearest(n, std::numeric_limits<double>::max());
+    std::vector<double> myFurthest(n, 0.0);
+
+    #pragma omp for schedule(runtime)
+    for (int i=0; i<n; ++i) {
+      processRow(i, points, type, myNearest, myFurthest);
+    }
+    #pragma omp critical {
+      for (int k=0; k<n; ++k) {
+        if (myNearest[k] < nearest[k]) {
+          nearest[k] = myNearest[k];
+        }
+        if (myFurthest[k] > furthest[k]) {
+          furthest[k] = myFurthest[k];
+        }
+      }
+    }
+  }
+}
 
 
 double meanSerial(const std::vector<double>&values) {
