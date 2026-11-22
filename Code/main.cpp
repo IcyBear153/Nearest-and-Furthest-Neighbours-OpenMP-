@@ -129,6 +129,10 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
 // so a lines number corresponds to its answers line number (default format 6.sf)
 void writeValues(const std::string& filename, const std::vector<double>&values) {
   std::ofstream file(filename);
+  if (!file) {   // the file could be open in excel which would lock it in windows
+    cerr << "!! ERROR -- can't write " <<filename<< " (is it open in another program?) !!" << endl;
+    std::exit(EXIT_FAILURE);
+  }
   for (double value : values) {
     file <<value<< '\n';
   }
