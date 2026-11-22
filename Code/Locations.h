@@ -1,5 +1,7 @@
-// functions for getting the object positions
-// either random or from a file
+// Locations -- where points come from,
+// point type, plus two ways to obitain points being reading from CSV or randomly.
+
+// only inlcude this file once (main.cpp includes it and Distances.h)
 #pragma once
 #include <string>
 #include <vector>
@@ -12,5 +14,5 @@ struct Point {
 
 // returns count points with x, y chosen uniformly at random from [0, 1)
 std::vector<Point> generateRandomLocations(int count);
-// reads from csv with one x,y pair per line
+// reads from csv with one x,y pair per line and stops if file cant be accessed
 std::vector<Point> readLocations(const std::string&filename);

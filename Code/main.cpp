@@ -1,13 +1,22 @@
 // Nearest and furthest neighbours
 
-// Takes a set of points in a square on each side, from 0 to 1.
-// For every point works out how close and far the nearest and furtherest other points are respectivley.
-// It does this the simple/native way, by checking every pair.
-// Points can be random (-n) or read from a file (-f).
+// Takes a set of points in the unit square (x,y between 0,1).
+// Finds the distance to its nearest and furthest other point for every point.
+// Writes these to nearest.csv and furthesst.csv,
+// doing so with one per line in the same order it reads the points.
+// Then prints the mean of both nearest and furthest and how long the search took.
+
+// Points are random (-n) or read form a CSF file (-f).
+// Distance is either taken as a striaght line (-d std) or Manhattan (-d man).
+// It runs out one thread (-s) or several with OpenMP (-p).
+// The search checks each pair twice using the default (-a native) or once using the optimised (-a half).
 
 // Usage:
-//     nearest_furthest -n <count> -d std|man -s|-p
-//     nearest_furthest -f <file>  -d std|man -s|-p
+//     nearest_furthest -n <count> -d std|man -s|-p [-a naive|half]
+//     nearest_furthest -f <file>  -d std|man -s|-p [-a naive|half]
+
+// The number of threads and loop shceule come from variables OMP_NUM_THREADS and OMP_SCHEDULE.
+
 
 #include <chrono>
 #include <cstdlib>
@@ -23,7 +32,7 @@ using std::cout,std::cerr,std::endl;
 
 // Stores the users choices from the command line
 struct Settings {
-  int count =0;                                // -n: number of random points to make
+  int count =0;                                // -n: number of random points to make (0 if not given)
   std::string filename;                        // -f: CSV file to read the points from
   DistanceType type = DistanceType::Standard;  // -d: which distance to use (std or man)
   bool parallel = false;                       // -s (serial) or -p (parallel)
@@ -38,15 +47,18 @@ void printUsage() {
 }
 
 // Fills in settings from the command line. Returns false if it isn't valid.
+// Steps through each terminal argument after program name (starting at argv[1])
 bool readCommandLine(int argc, char*argv[], Settings&settings) {
   bool serialGiven = false;
   bool parallelGiven = false;
 
   for (int i=1 ; i<argc; ++i) {
     std::string option = argv[i];
-    bool hasValue = (i+1 < argc);
+    bool hasValue = (i+1 < argc); // check if other word after to use as its value
 
     if (option == "-n" && hasValue) {
+      // i++ moves onto the value meaning the loop wont treat it as an option again after
+      // atoi turns the text into a number
       settings.count = std::atoi(argv[++i]);
       if (settings.count <2) {
         cerr<< "!! ERROR -- -n needs to be at least 2 points !!" << endl;
@@ -60,6 +72,7 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
 
     else if (option == "-d" && hasValue) {
       std::string value = argv[++i];
+      // chck if value is allowed, then set it
       if (value != "std" && value != "man") {
         cerr << "!! ERROR!!! -- -d must be followed by std or man !!" << endl;
         return false;
@@ -88,13 +101,15 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
     }
   }
   
+  // count (starting at 0) goes above if -n and fileneame only filled if -f
   bool countGiven = (settings.count >0);
   bool fileGiven = !settings.filename.empty();
-
+  // true if both were given or neither
   if (countGiven == fileGiven) {
     cerr<< "!! ERROR -- give EITHER -n or -f !!" <<endl;
     return false;
   }
+  // both makes 0 sense, anything else fine
   if (serialGiven && parallelGiven) {
     cerr << "!! ERROR -- give EITHER -s or -p !!" <<endl;
     return false;
@@ -105,7 +120,8 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
 }
 
 
-// writes one value per line (default formating)
+// writes one value per line in same order as points
+// so a lines number corresponds to its answers line number (default format 6.sf)
 void writeValues(const std::string& filename, const std::vector<double>&values) {
   std::ofstream file(filename);
   for (double value : values) {
@@ -113,6 +129,7 @@ void writeValues(const std::string& filename, const std::vector<double>&values) 
   }
 }
 
+// read options, get points, time search, write and print
 int main(int argc, char*argv[]) {
   Settings settings;
   if (!readCommandLine(argc,argv, settings)) {
@@ -127,18 +144,23 @@ int main(int argc, char*argv[]) {
   else {
     points = generateRandomLocations(settings.count);
   }
+  // file could have less than 2 points, then no neighbour so ERROR
   if (points.size() <2) {
     cerr<< "!! ERROR -- -n needs to be at least 2 points !!" << endl;
     return EXIT_FAILURE;
   }
 
-    // Time calculation
+  // Start timing.
+  // Only search and two means are timed, not reading or writing the files, so times compare searches themselfvs.
+  // steady_clock never goes backwards -- omp_get_wtime gave negative times with MinGW
+  // All this ensures time taken cant come out as negative
   auto startTime = std::chrono::steady_clock::now();
-  
   
   std::vector<double> nearest;
   std::vector<double> furthest;
 
+  // -a half picks search tool to only work out each pair once
+  // settings.parralel goes in too meaning same function does both -s and -p
   if (settings.half) {
     findNeighboursHalf(points, settings.type, settings.parallel, nearest, furthest);
   }
@@ -147,14 +169,15 @@ int main(int argc, char*argv[]) {
   }
   double meanNearest = mean(nearest, settings.parallel);
   double meanFurthest = mean(furthest, settings.parallel);
-
-
-  //take time on clock from the start time
+  //take time on clock from the start time -  Stop timing now() minus startTime gives a duration
   double timeTaken = std::chrono::duration<double>(std::chrono::steady_clock::now() -startTime).count(); 
 
+  // done after timer, so writing files insnt counted
   writeValues("nearest.csv", nearest);
   writeValues("furthest.csv", furthest);
 
+  // The output lines exactly as the breif specifies.
+  // 'fixed' and 'setprecision(3)' give time to 3.dp, because its set after means are printed, they keep their default 6.sf
   cout << "Mean distance to nearest neighbour: "  <<meanNearest  <<endl;
   cout << "Mean distance to furthest neighbour: " <<meanFurthest <<endl;
   cout << std::fixed << std::setprecision(3);
