@@ -12,8 +12,8 @@
 // The search checks each pair twice using the default (-a naive) or once using the optimised (-a half).
 
 // Usage:
-//     nearest_furthest -n <count> -d std|man -s|-p [-a naive|half]
-//     nearest_furthest -f <file>  -d std|man -s|-p [-a naive|half]
+//     nearest_furthest -n <count> -d std|man -s|-p [-a naive|half] [-t threads]
+//     nearest_furthest -f <file>  -d std|man -s|-p [-a naive|half] [-t threads]
 
 // The number of threads and loop shceule come from variables OMP_NUM_THREADS and OMP_SCHEDULE.
 
@@ -25,6 +25,7 @@
 #include <iomanip>
 #include <string>
 #include <vector>
+#include <omp.h>
 #include "Distances.h"
 #include "Locations.h"
 
@@ -37,13 +38,15 @@ struct Settings {
   DistanceType type = DistanceType::Standard;  // -d: which distance to use (std or man)
   bool parallel = false;                       // -s (serial) or -p (parallel)
   bool half = false;                           // -a: naive (every pair twice) or half (each pair once)
+  int threads = 0;                             // -t: number of threads for -p (0 if not given) (OpenMP decides)
 };
 
 void printUsage() {
   cerr << "Usage:\n"
        << " nearest_furthest -n <count> -d std|man -s|-p\n"
        << " nearest_furthest -f <file>  -d std|man -s|-p\n"
-       << " add -a half to check each pair only once\n";
+       << " add -a half to check each pair only once\n"
+       << " add -t <threads> to pick how many threads -p uses\n";
 }
 
 // Fills in settings from the command line. Returns false if it isn't valid.
@@ -55,8 +58,8 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
   for (int i=1 ; i<argc; ++i) {
     std::string option = argv[i];
     bool hasValue = (i+1 < argc); // check if other word after to use as its value
-    // -n, -f, -d, -a, need a value straight after them
-    if ((option == "-n" || option == "-f" || option == "-d" || option == "-a") &&!hasValue) {
+    // -n, -f, -d, -a, -t, need a value straight after them
+    if ((option == "-n"||option == "-f"||option == "-d"||option == "-a"||option == "-t") && !hasValue) {
       cerr << "!! ERROR -- " <<option<< " needs a value after it !!" << endl;
       return false;
     }
@@ -88,10 +91,18 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
     else if (option == "-a" && hasValue) {
       std::string value = argv[++i];
       if (value != "naive" && value != "half") {
-        cerr << "!! ERROR -- -a must be followed by naive or half !!" << endl;
+        cerr << "!! ERROR -- -a must be followed by naive or half !!" <<endl;
         return false;
       }
       settings.half = (value == "half");
+    }
+
+    else if (option == "-t" && hasValue) {
+      settings.threads = std::atoi(argv[++i]);
+      if (settings.threads < 1) {
+        cerr << "!! ERROR -- -t needs to be at least 1 thread !!" <<endl;
+        return false;
+      }
     }
 
     else if (option == "-s") {
@@ -101,7 +112,7 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
       parallelGiven = true;
     }
     else {
-      cerr << "!! ERROR -- unknown option " <<option<< "!!" << endl;
+      cerr<< "!! ERROR -- unknown option " <<option<< "!!" <<endl;
       return false;
     }
   }
@@ -116,7 +127,7 @@ bool readCommandLine(int argc, char*argv[], Settings&settings) {
   }
   // both makes 0 sense, anything else fine
   if (serialGiven && parallelGiven) {
-    cerr << "!! ERROR -- give EITHER -s or -p !!" <<endl;
+    cerr<< "!! ERROR -- give EITHER -s or -p !!" <<endl;
     return false;
   }
 
@@ -144,6 +155,10 @@ int main(int argc, char*argv[]) {
   if (!readCommandLine(argc,argv, settings)) {
     printUsage();
     return EXIT_FAILURE;
+  }
+  // -t sets how many threads the parallel loops use (without, OpenMP decides which is probs all of them)
+  if (settings.threads >0) {
+    omp_set_num_threads(settings.threads);
   }
 
   std::vector<Point> points;
