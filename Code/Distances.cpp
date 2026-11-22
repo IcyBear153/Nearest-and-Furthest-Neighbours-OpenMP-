@@ -119,7 +119,8 @@ void findNeighboursHalfParallel(const std::vector<Point>&points, DistanceType ty
   nearest.assign(n, std::numeric_limits<double>::max());
   furthest.assign(n,0.0);
 
-  #pragma omp parallel {
+  #pragma omp parallel
+  {
     std::vector<double> myNearest(n, std::numeric_limits<double>::max());
     std::vector<double> myFurthest(n, 0.0);
 
@@ -127,7 +128,8 @@ void findNeighboursHalfParallel(const std::vector<Point>&points, DistanceType ty
     for (int i=0; i<n; ++i) {
       processRow(i, points, type, myNearest, myFurthest);
     }
-    #pragma omp critical {
+    #pragma omp critical
+    {
       for (int k=0; k<n; ++k) {
         if (myNearest[k] < nearest[k]) {
           nearest[k] = myNearest[k];
