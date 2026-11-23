@@ -29,6 +29,7 @@
 #include <omp.h>
 #include "Distances.h"
 #include "Locations.h"
+#include "../ConvexHull/FastSearch.h"
 
 using std::cout,std::cerr,std::endl;
 

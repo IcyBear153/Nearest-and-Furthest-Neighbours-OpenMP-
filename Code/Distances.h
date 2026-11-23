@@ -1,8 +1,7 @@
 // Measuring distance between points and finding each points nearest and furthest neighbour
-// Three searches give the same answers:
+// Two searches give the same answers:
 // findNeighbours  -- brute force (naieve), verbetum to the breif
 // findNeighboursHalf -- each pair only only once, aka half the work
-// findNeighboursFast -- skips most pairs by using a grid for the nearest and the 'convex hull' for furthest
 
 #pragma once
 #include <vector>
@@ -26,10 +25,6 @@ void findNeighbours(const std::vector<Point>&points, DistanceType type, bool par
 // Same answers as findNeighbours, but each pair is only worked out once and counted for both points.
 // since distance i,j is the same as j,i, we save half the work.
 void findNeighboursHalf(const std::vector<Point>& points, DistanceType type, bool parallel, std::vector<double>&nearest, std::vector<double>&furthest);
-
-// Same answers again without checking every pair:
-// a grid for nearest where only nearby cells are checked and the 'convex hull' for furthest.
-void findNeighboursFast(const std::vector<Point>&points, DistanceType type, bool parallel, std::vector<double>&nearest, std::vector<double>&furthest);
 
 // average of values. with parallel, adding is slit across thereads.
 double mean(const std::vector<double>&values, bool parallel);
