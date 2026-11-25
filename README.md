@@ -11,6 +11,12 @@ cmake --build build --config Release
 
 Needs CMake 3.12+ and a C++17 compiler with OpenMP.
 
+Or without CMake:
+
+```
+g++ -O2 -fopenmp *.cpp ConvexHull/FastSearch.cpp -o nearest_furthest
+```
+
 ## Run
 
 ```
@@ -18,6 +24,7 @@ nearest_furthest -n <count> | -f <file>  -d std|man  -s|-p  [-a naive|half|fast]
 ```
 
 Example: `build/nearest_furthest -f ../100000locations.csv -d std -p`
+(the program is in `build\Release\` instead if CMake used Visual Studio)
 
 Results go to `nearest.csv` and `furthest.csv`. Set the loop schedule with `OMP_SCHEDULE` (e.g. `$env:OMP_SCHEDULE = "dynamic"`).
 
@@ -25,4 +32,4 @@ Results go to `nearest.csv` and `furthest.csv`. Set the loop schedule with `OMP_
 
 - `plot_histograms.py std|man` - histograms from `nearest.csv` and `furthest.csv`
 - `plot_schedules.py <csv files>` - speed-up against threads for each schedule
-- `scaling.py` - time against number of points (run from `Code` after building)
+- `ConvexHull/scaling.py` - time against number of points (run from `Code` after building)
