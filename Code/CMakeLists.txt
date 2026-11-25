@@ -15,7 +15,7 @@ endif()
 
 # Build every .cpp file in this folder into one program
 file(GLOB SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
-list(APPEND SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../ConvexHull/FastSearch.cpp") # -a fast in ConvexHull
+list(APPEND SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/ConvexHull/FastSearch.cpp") # -a fast in Code/ConvexHull
 add_executable(nearest_furthest ${SOURCES})
 
 # Enable OpenMP for whatever compiler is used
